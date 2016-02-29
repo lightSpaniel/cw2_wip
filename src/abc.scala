@@ -24,14 +24,18 @@ case class yellow(position: Int) extends peg{
 
 
 object getCode{
+  val NUMBER_OF_COLOURS = 6
+  //pass params for range, rand vals - add to interface
+  def populate(numOfPegs:Int=4):StringBuilder= {
+    //this one
 
-  def populate():StringBuilder= {
-
-    val range = Vector(1,2,3,4)
     val secretCode = new StringBuilder
 
+    val range = 1 to numOfPegs
+
     for (num <- range) {
-      val rand = (((Math.random()) * 6)+1).toInt
+      //this one
+      val rand = (((Math.random()) * NUMBER_OF_COLOURS )+1).toInt
 
       rand match {
         case 1 => secretCode += (blue(num)).colour
@@ -41,27 +45,53 @@ object getCode{
         case 5 => secretCode += (red(num)).colour
         case 6 => secretCode += (yellow(num)).colour
       }
-
     }
     return secretCode
   }
 }
 
 
-
-
 class GameBoard{
 
+  val gameSize = getGameSize()
+  val easy = getEasiness()
   val mycode = newGame()
+
+  def getGameSize():Int = {
+
+    val DEFAULTSIZE = 4
+
+    val userInput = scala.io.StdIn.readLine("How many pegs would you like to guess? [default "+DEFAULTSIZE+"] ")
+
+    if(userInput != null) {
+
+      try {
+        val numberPegs = userInput.toInt
+        return numberPegs
+
+      } catch {case e: NumberFormatException => println("Try an integer")}
+    }
+    return DEFAULTSIZE
+  }
+
+  def getEasiness():Boolean={
+    val userInput = scala.io.StdIn.readLine("Do you want to make this easy? ")
+
+    if((userInput == "y") || (userInput == "yes")){
+      return true
+    }
+    else return false
+  }
 
   def newGame():StringBuilder={
 
-    return getCode.populate()
-
+    return getCode.populate(gameSize)
   }
 
   def getGuess(): String={
-    val userInput = scala.io.StdIn.readLine("What do you guess? ")
+    if(easy){println(mycode)}
+    val userInput = (scala.io.StdIn.readLine("What do you guess? ")).toUpperCase
+
     return userInput
   }
 
@@ -71,7 +101,6 @@ class GameBoard{
     val gos = 0
 
     while(gotit==false){
-      println(mycode)
 
       gotit=takeTurn(getGuess())
 
@@ -79,7 +108,6 @@ class GameBoard{
         println("Out of goes")
         gotit==true
       }
-
     }
   }
 
@@ -90,43 +118,50 @@ class GameBoard{
     }else{
      false
     }
-
   }
 
 
   def takeTurn(turn: String): Boolean={
-    val checkString = mycode.clone()
+
     var count = 0
     var letterNumber = 0
       for(letter <- turn) {
-        println("LETTER: " + letter)
-        println("CHECKSTRING: " + checkString.charAt(letterNumber))
-        if (compareChar(letter, mycode.charAt(letterNumber))) {
-          println("match")
-          count += 1
-      }
+        printDetails(letter, mycode, easy, letterNumber)
+
+        if (compareChar(letter, mycode.charAt(letterNumber))) {count += 1}
         letterNumber += 1
     }
-    printing(count)
-    if (count == 4){return true}else {return false}
+    println()
+    printing(count, gameSize)
+    if (count == gameSize){return true}else {return false}
   }
+
+  def printDetails(letter: Char, myCode: StringBuilder,
+                   easy:Boolean, letterNumber: Int):Unit={
+    if(easy==true){
+      println("LETTER: " + letter)
+      println("CHECKSTRING: " + mycode.charAt(letterNumber))
+    }
+
+  }
+
 }
 
 object printing{
-  def apply(black: Int): Unit ={
+  def apply(black: Int, gameSize: Int): Unit ={
     for(black <- 0 until black){print("BLACK ")}
-    for(white <- 0 until (4-black)){print("WHITE ")}
+    for(white <- 0 until (gameSize-black)){print("WHITE ")}
     println("\n---------------------")
-    if(black == 4){println("Well done!")}
+    if(black == gameSize){println("Well done!")}
 
   }
 
 }
-
-object tryThis extends App {
-
-  val doit = new GameBoard
-  doit.play()
+//main
+object Main extends App {
+//interface
+  val getNewGame = new GameBoard
+  getNewGame.play()
 
 }
 
